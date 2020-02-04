@@ -41,21 +41,29 @@ const idle = {
   }
 };
 
+const realityCheckOrAutoplay = [
+  {
+    target: "realityCheck",
+    cond: "shouldShowRealityCheck"
+  },
+  { target: "autoplay" }
+];
+
 const spinning = {
-  onEntry: ["reduceAutoplayRounds", "addOneToRealityCheck"],
+  onEntry: [
+    "clearWin",
+    "reduceAutoplayRounds",
+    "addOneToRealityCheck",
+    "makeBet"
+  ],
   on: {
-    QUICK_STOP: "autoplay"
+    QUICK_STOP: realityCheckOrAutoplay
   },
   invoke: {
     src: "asyncStuff",
-    onDone: [
-      {
-        target: "realityCheck",
-        cond: "shouldShowRealityCheck"
-      },
-      { target: "autoplay" }
-    ]
-  }
+    onDone: realityCheckOrAutoplay
+  },
+  onExit: ["winMoney"]
 };
 
 const realityCheck = {
@@ -69,7 +77,10 @@ const realityCheck = {
 
 export const context = {
   autoplay: 0,
-  realityCheckCount: 0
+  realityCheckCount: 0,
+  win: 0,
+  bet: 1,
+  balance: 100
 };
 
 const addOneToRealityCheck = assign((ctx: any) => ({
@@ -93,6 +104,15 @@ const asyncStuff = () => {
   const call = fake_server();
   return Promise.all([time, call]);
 };
+const clearWin = assign((ctx: any) => ({ win: 0 }));
+const makeBet = assign((ctx: any) => ({ balance: ctx.balance - ctx.bet }));
+const winMoney = assign((ctx: any) => {
+  const win = Math.floor(Math.random() * 10);
+  return {
+    balance: ctx.balance + win,
+    win
+  };
+});
 
 export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
   {
@@ -112,8 +132,11 @@ export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
       addOneToRealityCheck,
       addRounds,
       check,
+      makeBet,
+      clearWin,
       triggerSpin,
-      reduceAutoplayRounds
+      reduceAutoplayRounds,
+      winMoney
     },
     guards: {
       hasAutoplayRounds,
