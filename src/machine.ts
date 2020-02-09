@@ -28,7 +28,7 @@ const getWin = () =>
     setTimeout(
       () =>
         resolve({
-          win: Math.random() > 0.5 ? 0 : 200
+          win: Math.random() > 0.5 ? 0 : Math.floor(Math.random() * 500)
         }),
       Math.random() * 5000
     )

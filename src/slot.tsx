@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { useMachine } from "@xstate/react";
 import { machine } from "./machine";
 import { Graph } from "./graph";
+import { WinPresentation } from "./win-presentation";
 
 function Game() {
   const [current, send] = useMachine(machine);
@@ -23,6 +24,7 @@ function Game() {
 
   return (
     <div>
+      {current.matches("win") && <WinPresentation win={win} />}
       <Graph ctx={current.context} value={current.value.toString()} />
       <div className="keypad">
         <section>
