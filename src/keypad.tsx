@@ -13,9 +13,14 @@ export function Keypad({ bet, win, balance }: Props) {
         <button>Spin</button>
       </section>
       <section>
-        <div>Bet {bet}</div>
-        <div>Win {win}</div>
-        <div>Balance {balance}</div>
+        <div>Bet</div>
+        <div>Win</div>
+        <div>Balance</div>
+      </section>
+      <section>
+        <div>{bet}</div>
+        <div>{win}</div>
+        <div>{balance}</div>
       </section>
     </div>
   );
