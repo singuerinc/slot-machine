@@ -22,7 +22,7 @@ export function Graph({ value, ctx }: Props) {
         <i dangerouslySetInnerHTML={{ __html: feather.icons.clock.toSvg() }} />
       </div>
       <div data-active={value === "bet"} className="bet">
-        <h1>Bet</h1>
+        <h1>Place Bet</h1>
         <i
           dangerouslySetInnerHTML={{
             __html: feather.icons["pie-chart"].toSvg()
@@ -43,7 +43,7 @@ export function Graph({ value, ctx }: Props) {
         <i dangerouslySetInnerHTML={{ __html: feather.icons.zap.toSvg() }} />
       </div> */}
       <div data-active={value === "win"} className="win">
-        <h1>Win</h1>
+        <h1>Win Presentation</h1>
         <i dangerouslySetInnerHTML={{ __html: feather.icons.smile.toSvg() }} />
       </div>
       <div data-active={value === "noWin"} className="noWin">

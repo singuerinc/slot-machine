@@ -51,16 +51,7 @@ const updateBalance = assign<typeof context>({
   balance: ctx => ctx.balance + ctx.win
 });
 
-const placeBet = ctx =>
-  new Promise(resolve =>
-    setTimeout(
-      () =>
-        resolve({
-          balance: ctx.balance - ctx.bet
-        }),
-      1000
-    )
-  );
+const placeBet = () => new Promise(resolve => setTimeout(resolve, 1000));
 
 const isWin = ctx => ctx.win !== 0;
 const stopIf = ctx =>
@@ -101,17 +92,16 @@ export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
         }
       },
       bet: {
-        entry: ["clearWin", "decreaseAutoplay"],
+        entry: [
+          "clearWin",
+          "decreaseAutoplay",
+          assign({
+            balance: ctx => ctx.balance - ctx.bet
+          })
+        ],
         invoke: {
           src: "placeBet",
-          onDone: {
-            actions: [
-              assign({
-                balance: (_, event) => event.data.balance
-              })
-            ],
-            target: "spinning"
-          }
+          onDone: "spinning"
         }
       },
       spinning: {

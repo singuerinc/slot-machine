@@ -9,6 +9,7 @@
 html {
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 
 body {
@@ -18,6 +19,14 @@ body {
   color: gray;
   font: 1em -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+#app {
+  max-width: 48em;
 }
 
 .graph {
@@ -173,4 +182,12 @@ body {
   width: 24px;
   height: 24px;
   animation: spin 4s linear infinite;
+}
+
+.highlight-bad {
+  color: orangered;
+}
+
+.highlight-good {
+  color: yellowgreen;
 }

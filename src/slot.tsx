@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useEffect } from "react";
 import "tachyons";
 import styled from "styled-components";
 import { useMachine } from "@xstate/react";
@@ -8,6 +9,18 @@ import { Graph } from "./graph";
 function Game() {
   const [current, send] = useMachine(machine);
   const { bet, balance, win, autoplay } = current.context;
+
+  function onKeyDown(e) {
+    if (e.code === "Space") {
+      send("SPIN");
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    return () => void window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
     <div>
       <Graph ctx={current.context} value={current.value.toString()} />
@@ -35,8 +48,17 @@ function Game() {
         <section>
           <div>{autoplay}</div>
           <div>{bet}</div>
-          <div>{win}</div>
-          <div>{balance.toFixed(2)}</div>
+          <div className={current.matches("win") ? "highlight-good" : ""}>
+            {win}
+          </div>
+          <div
+            className={
+              (current.matches("bet") ? "highlight-bad" : "") ||
+              (current.matches("win") ? "highlight-good" : "")
+            }
+          >
+            {balance.toFixed(2)}
+          </div>
         </section>
       </div>
     </div>
