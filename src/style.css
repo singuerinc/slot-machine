@@ -2,6 +2,11 @@
 *::before,
 *::after {
   box-sizing: border-box;
+  user-select: none;
+}
+
+button:focus {
+  outline: 0;
 }
 
 html {
@@ -49,10 +54,15 @@ body {
 }
 
 .keypad section:nth-child(1) button {
+  cursor: pointer;
   background-color: greenyellow;
   border: 0;
   padding: 1em 3em;
   border-radius: 999em;
+}
+
+.keypad section:nth-child(1) button:active {
+  background-color: white;
 }
 
 .keypad section:nth-child(2),
