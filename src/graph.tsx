@@ -52,15 +52,6 @@ export function Graph({ value, ctx }: Props) {
       </div>
       <div data-active={value === "autoplay"} className="autoplay">
         <h1>Autoplay</h1>
-        <i
-          style={{ color: ctx.autoplay > 0 ? "greenyellow" : "red" }}
-          dangerouslySetInnerHTML={{
-            __html:
-              ctx.autoplay > 0
-                ? feather.icons["thumbs-up"].toSvg()
-                : feather.icons["thumbs-down"].toSvg()
-          }}
-        />
       </div>
     </div>
   );

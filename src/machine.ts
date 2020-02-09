@@ -43,6 +43,7 @@ const loadResources = () => new Promise(resolve => setTimeout(resolve, 1000));
 const showIntroMovie = () => new Promise(resolve => setTimeout(resolve, 1000));
 
 const setAutoplayRounds = assign<typeof context>({ autoplay: 5 });
+const resetRounds = assign<typeof context>({ autoplay: 0 });
 const decreaseAutoplay = assign<typeof context>({
   autoplay: ctx => Math.max(0, ctx.autoplay - 1)
 });
@@ -135,7 +136,10 @@ export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
       },
       autoplay: {
         after: {
-          1000: [{ target: "idle", cond: "stopIf" }, { target: "bet" }]
+          1000: [
+            { target: "idle", cond: "stopIf", actions: ["resetRounds"] },
+            { target: "bet" }
+          ]
         }
       }
     }
@@ -145,7 +149,8 @@ export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
       updateBalance,
       decreaseAutoplay,
       clearWin,
-      setAutoplayRounds
+      setAutoplayRounds,
+      resetRounds
     },
     guards: {
       isWin,
