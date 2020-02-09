@@ -10,11 +10,21 @@ function Game() {
   const { bet, balance, win, autoplay } = current.context;
   return (
     <div>
-      <Graph value={current.value.toString()} />
+      <Graph ctx={current.context} value={current.value.toString()} />
       <div className="keypad">
         <section>
-          <button onClick={() => send("AUTOPLAY")}>Autoplay</button>
-          <button onClick={() => send("SPIN")}>Spin</button>
+          <input
+            disabled={!current.matches("idle") || autoplay !== 0}
+            type="button"
+            onClick={() => send("AUTOPLAY")}
+            value="Autoplay"
+          />
+          <input
+            disabled={!current.matches("idle")}
+            type="button"
+            onClick={() => send("SPIN")}
+            value="Spin"
+          />
         </section>
         <section>
           <div>Autoplay Rounds</div>

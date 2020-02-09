@@ -39,8 +39,8 @@ const g4 = () => new Promise(resolve => setTimeout(resolve, 3000));
 
 const spinRoutine = () => Promise.all([getWin(), reelsSpin(), g4()]);
 
-const loadResources = () => new Promise(resolve => setTimeout(resolve, 200));
-const showIntroMovie = () => new Promise(resolve => setTimeout(resolve, 400));
+const loadResources = () => new Promise(resolve => setTimeout(resolve, 1000));
+const showIntroMovie = () => new Promise(resolve => setTimeout(resolve, 1000));
 
 const setAutoplayRounds = assign<typeof context>({ autoplay: 5 });
 const decreaseAutoplay = assign<typeof context>({
@@ -63,7 +63,13 @@ const placeBet = ctx =>
   );
 
 const isWin = ctx => ctx.win !== 0;
-const hasAutoplayRounds = ctx => ctx.autoplay > 0;
+const stopIf = ctx =>
+  [
+    ctx.autoplay === 0, // no more rounds
+    ctx.win > 0, // on any win
+    ctx.balance < ctx.bet, // not enough money
+    ctx.balance < 998 // if cash decreases by
+  ].some(Boolean);
 
 export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
   {
@@ -123,26 +129,23 @@ export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
       },
       result: {
         after: {
-          500: [{ target: "win", cond: "isWin" }, { target: "noWin" }]
+          200: [{ target: "win", cond: "isWin" }, { target: "noWin" }]
         }
       },
       win: {
         entry: ["updateBalance"],
         after: {
-          1000: "autoplay"
+          1500: "autoplay"
         }
       },
       noWin: {
         after: {
-          1000: "autoplay"
+          1500: "autoplay"
         }
       },
       autoplay: {
         after: {
-          500: [
-            { target: "bet", cond: "hasAutoplayRounds" },
-            { target: "idle" }
-          ]
+          1000: [{ target: "idle", cond: "stopIf" }, { target: "bet" }]
         }
       }
     }
@@ -156,7 +159,7 @@ export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
     },
     guards: {
       isWin,
-      hasAutoplayRounds
+      stopIf
     },
     services: {
       loadResources,
