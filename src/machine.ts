@@ -14,9 +14,17 @@ export interface SlotStateSchema {
   };
 }
 
-export type SlotEvent = { type: "SPIN" } | { type: "AUTOPLAY" };
+export type IDialog = {
+  title: string;
+};
+
+export type SlotEvent =
+  | { type: "SPIN" }
+  | { type: "AUTOPLAY" }
+  | { type: "DIALOG"; payload: IDialog };
 
 export const context = {
+  dialogs: [],
   autoplay: 0,
   bet: 1.2,
   win: 0,
@@ -53,6 +61,13 @@ const updateBalance = assign<typeof context>({
 });
 
 const placeBet = () => new Promise(resolve => setTimeout(resolve, 1000));
+const displayDialogs = ctx => {
+  const dialog = ctx.dialogs.shift();
+  if (dialog) {
+    console.log("DIALOGS!", dialog.title);
+    assign({ dialogs: ctx.dialogs });
+  }
+};
 
 const isWin = ctx => ctx.win !== 0;
 const stopIf = ctx =>
@@ -69,6 +84,15 @@ export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
     strict: true,
     initial: "loading",
     context,
+    on: {
+      DIALOG: {
+        actions: [
+          assign({
+            dialogs: (ctx, event) => [...ctx.dialogs, event.payload]
+          })
+        ]
+      }
+    },
     states: {
       loading: {
         invoke: {
@@ -83,6 +107,7 @@ export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
         }
       },
       idle: {
+        entry: ["displayDialogs"],
         on: {
           SPIN: "bet",
           AUTOPLAY: [
@@ -150,7 +175,8 @@ export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
       decreaseAutoplay,
       clearWin,
       setAutoplayRounds,
-      resetRounds
+      resetRounds,
+      displayDialogs
     },
     guards: {
       isWin,

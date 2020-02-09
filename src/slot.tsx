@@ -6,6 +6,7 @@ import { useMachine } from "@xstate/react";
 import { machine } from "./machine";
 import { Graph } from "./graph";
 import { WinPresentation } from "./win-presentation";
+import { timer } from "rxjs";
 
 function Game() {
   const [current, send] = useMachine(machine);
@@ -18,8 +19,14 @@ function Game() {
   }
 
   useEffect(() => {
+    const realityCheck$ = timer(10000, 10000).subscribe(() => {
+      send({ type: "DIALOG", payload: { title: "Wake up!" } });
+    });
     window.addEventListener("keydown", onKeyDown);
-    return () => void window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      realityCheck$.unsubscribe();
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
 
   return (
