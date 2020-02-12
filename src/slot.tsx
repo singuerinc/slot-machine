@@ -1,39 +1,18 @@
-import * as React from "react";
-import { useEffect } from "react";
-import "tachyons";
-import styled from "styled-components";
 import { useMachine } from "@xstate/react";
-import { machine } from "./machine";
+import * as React from "react";
+import styled from "styled-components";
+import "tachyons";
 import { Graph } from "./graph";
-import { WinPresentation } from "./win-presentation";
-import { timer } from "rxjs";
+import { machine } from "./machine";
 
 function Game() {
   const [current, send] = useMachine(machine);
   const { bet, balance, win, autoplay } = current.context;
 
-  function onKeyDown(e) {
-    if (e.code === "Space") {
-      send("SPIN");
-    }
-  }
-
-  useEffect(() => {
-    const realityCheck$ = timer(10000, 10000).subscribe(() => {
-      send({ type: "DIALOG", payload: { title: "Wake up!" } });
-    });
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      realityCheck$.unsubscribe();
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, []);
-
   return (
     <div>
-      {current.matches("win") && <WinPresentation win={win} />}
-      <Graph ctx={current.context} value={current.value.toString()} />
-      <div className="keypad">
+      {/* <Graph ctx={current.context} value={current.value.toString()} /> */}
+      {/* <div className="keypad">
         <section>
           <input
             disabled={!current.matches("idle") || autoplay !== 0}
@@ -69,7 +48,7 @@ function Game() {
             {balance.toFixed(2)}
           </div>
         </section>
-      </div>
+      </div> */}
     </div>
   );
 }
