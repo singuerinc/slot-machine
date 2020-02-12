@@ -1,14 +1,220 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  user-select: none;
+  position: relative;
+}
+
 html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 3em;
+  background-color: #212529;
+  color: gray;
+  font: 1em -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+#app {
+  max-width: 48em;
+}
+
+.graph {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 10px;
+  grid-auto-rows: minmax(100px, auto);
+  grid-template-areas:
+    "w a b c"
+    "x d e f"
+    "y g h i"
+    "z j k l";
+}
+
+/* loading */
+.graph div:nth-child(1) {
+  grid-area: a;
+}
+
+/* movie */
+.graph div:nth-child(2) {
+  grid-area: b;
+}
+
+/* idle */
+.graph div:nth-child(3) {
+  grid-area: d;
+}
+
+/* bet */
+.graph div:nth-child(4) {
+  grid-area: e;
+}
+
+/* spinning */
+.graph div:nth-child(5) {
+  grid-area: f;
+}
+
+/* result
+.graph div:nth-child(6) {
+  grid-area: g;
+} */
+
+/* win */
+.graph div:nth-child(6) {
+  grid-area: g;
+}
+
+/* no win */
+.graph div:nth-child(7) {
+  grid-area: h;
+}
+
+/* autoplay */
+.graph div:nth-child(8) {
+  grid-area: x;
+}
+
+.graph div {
+  padding: 1em;
+  border: 4px solid gray;
+  transition: border 200ms ease-in-out;
+}
+
+.graph div h1 {
+  margin: 0;
+  padding: 0;
+  font-size: 1.4em;
+  font-weight: normal;
+}
+
+.graph div i {
+  display: block;
+  margin-top: 0.4em;
+  visibility: hidden;
+}
+
+.graph div[data-active="true"] i {
+  visibility: visible;
+}
+
+.graph div[data-active="true"] {
+  color: #fff9db;
+  font-weight: bold;
+  border: 4px solid #fff9db;
+}
+
+.graph div[data-active="true"].win {
+  border: 4px solid #69db7c;
+}
+
+.graph div[data-active="true"].noWin {
+  border: 4px solid #f03e3e;
+}
+
+.keypad {
+  color: #fff9db;
+  display: flex;
+  flex-flow: column;
+  width: 100%;
+}
+
+.keypad section:nth-child(1) {
+  margin: 2em 0;
+  display: flex;
+  justify-content: center;
+}
+
+.keypad section:nth-child(1) input {
+  cursor: pointer;
+  background-color: #69db7c;
+  border: 0;
+  margin: 0 1em;
+  padding: 1em 3em;
+  border-radius: 999em;
+}
+
+.keypad section:nth-child(1) input:active {
+  background-color: #fff9db;
+}
+
+.keypad section:nth-child(1) input:focus {
+  outline: 0;
+}
+
+.keypad section:nth-child(1) input:disabled {
+  opacity: 0.2;
+}
+
+.keypad section:nth-child(2),
+.keypad section:nth-child(3) {
+  display: flex;
+  text-align: center;
+}
+
+.keypad section:nth-child(2) div,
+.keypad section:nth-child(3) div {
+  flex: 1 1;
+}
+
+.keypad section:nth-child(3) div {
+  font-weight: bold;
+  font-size: 2em;
+  color: #ffe066;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-icon {
+  width: 24px;
+  height: 24px;
+  animation: spin 4s linear infinite;
+}
+
+.highlight-bad {
+  color: #f03e3e;
+}
+
+.highlight-good {
+  color: #69db7c;
+}
+
+.win-presentation {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 72%;
+  transform: translate(-50%, -50%);
+  color: #111;
+  text-align: center;
+  background: #69db7cfe;
+  z-index: 1;
+  padding: 3em;
+}
+
+.win-presentation h1 {
+  font-size: 6em;
   margin: 0;
   padding: 0;
 }
 
-body {
-  margin: 1em;
+.win-presentation h2 {
+  font-size: 12em;
+  margin: 0;
   padding: 0;
-  background-color: #111;
-  color: greenyellow;
-  font-size: 1.2em;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }

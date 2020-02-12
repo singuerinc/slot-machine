@@ -1,33 +1,75 @@
 import * as React from "react";
+import { useEffect } from "react";
 import "tachyons";
 import styled from "styled-components";
 import { useMachine } from "@xstate/react";
 import { machine } from "./machine";
+import { Graph } from "./graph";
+import { WinPresentation } from "./win-presentation";
+import { timer } from "rxjs";
 
 function Game() {
   const [current, send] = useMachine(machine);
-  const { value, matches, context } = current;
-  const { win, bet, balance, autoplay, realityCheckCount } = context;
+  const { bet, balance, win, autoplay } = current.context;
+
+  function onKeyDown(e) {
+    if (e.code === "Space") {
+      send("SPIN");
+    }
+  }
+
+  useEffect(() => {
+    const realityCheck$ = timer(10000, 10000).subscribe(() => {
+      send({ type: "DIALOG", payload: { title: "Wake up!" } });
+    });
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      realityCheck$.unsubscribe();
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
 
   return (
     <div>
-      <section>
-        <h1>Autoplay {autoplay}</h1>
-        <h1>Reality check {realityCheckCount}</h1>
-        <button onClick={() => send("SET_AUTOPLAY_ROUNDS")}>set rounds</button>
-      </section>
-      <section>
-        <h1>{JSON.stringify(value)}</h1>
-        {matches("idle") && <button onClick={() => send("SPIN")}>spin</button>}
-        {matches("spinning") && (
-          <button onClick={() => send("QUICK_STOP")}>stop</button>
-        )}
-      </section>
-      <section className="w-100 flex">
-        <h2 className="w-33">Balance {balance}</h2>
-        <h2 className="w-33">Bet {bet}</h2>
-        <h2 className="w-33">Win {win}</h2>
-      </section>
+      {current.matches("win") && <WinPresentation win={win} />}
+      <Graph ctx={current.context} value={current.value.toString()} />
+      <div className="keypad">
+        <section>
+          <input
+            disabled={!current.matches("idle") || autoplay !== 0}
+            type="button"
+            onClick={() => send("AUTOPLAY")}
+            value="Autoplay"
+          />
+          <input
+            disabled={!current.matches("idle")}
+            type="button"
+            onClick={() => send("SPIN")}
+            value="Spin"
+          />
+        </section>
+        <section>
+          <div>Autoplay Rounds</div>
+          <div>Bet</div>
+          <div>Win</div>
+          <div>Balance</div>
+        </section>
+        <section>
+          <div>{autoplay}</div>
+          <div>{bet}</div>
+          <div className={current.matches("win") ? "highlight-good" : ""}>
+            {win}
+          </div>
+          <div
+            className={
+              (current.matches("bet") ? "highlight-bad" : "") ||
+              (current.matches("win") ? "highlight-good" : "")
+            }
+          >
+            {balance.toFixed(2)}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

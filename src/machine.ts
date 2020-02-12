@@ -2,148 +2,191 @@ import { Machine, assign, send } from "xstate";
 
 export interface SlotStateSchema {
   states: {
-    autoplay: {};
+    loading: {};
+    intro: {};
     idle: {};
-    realityCheck: {};
+    bet: {};
     spinning: {};
+    result: {};
+    win: {};
+    noWin: {};
+    autoplay: {};
   };
 }
 
+export type IDialog = {
+  title: string;
+};
+
 export type SlotEvent =
   | { type: "SPIN" }
-  | { type: "QUICK_STOP" }
-  | { type: "SET_AUTOPLAY_ROUNDS" }
-  | { type: "REALITY_CHECK" };
-
-const autoplay = {
-  on: {
-    "": [
-      {
-        target: "spinning",
-        cond: "hasAutoplayRounds"
-      },
-      {
-        target: "idle"
-      }
-    ]
-  }
-};
-
-const idle = {
-  on: {
-    SPIN: {
-      target: "spinning"
-    },
-    SET_AUTOPLAY_ROUNDS: {
-      internal: true,
-      actions: "addRounds"
-    }
-  }
-};
-
-const realityCheckOrAutoplay = [
-  {
-    target: "realityCheck",
-    cond: "shouldShowRealityCheck"
-  },
-  { target: "autoplay" }
-];
-
-const spinning = {
-  onEntry: [
-    "clearWin",
-    "reduceAutoplayRounds",
-    "addOneToRealityCheck",
-    "makeBet"
-  ],
-  on: {
-    QUICK_STOP: realityCheckOrAutoplay
-  },
-  invoke: {
-    src: "asyncStuff",
-    onDone: realityCheckOrAutoplay
-  },
-  onExit: ["winMoney"]
-};
-
-const realityCheck = {
-  on: {
-    "": {
-      actions: ["check"],
-      target: "autoplay"
-    }
-  }
-};
+  | { type: "AUTOPLAY" }
+  | { type: "DIALOG"; payload: IDialog };
 
 export const context = {
+  dialogs: [],
   autoplay: 0,
-  realityCheckCount: 0,
+  bet: 1.2,
   win: 0,
-  bet: 1,
-  balance: 100
+  balance: 1000
 };
 
-const addOneToRealityCheck = assign((ctx: any) => ({
-  realityCheckCount: (ctx.realityCheckCount + 1) % 3
-}));
+const getWin = () =>
+  new Promise(resolve =>
+    setTimeout(
+      () =>
+        resolve({
+          win: Math.random() > 0.5 ? 0 : Math.floor(Math.random() * 500)
+        }),
+      Math.random() * 5000
+    )
+  );
 
-const reduceAutoplayRounds = assign((ctx: any) => ({
-  autoplay: Math.max(0, ctx.autoplay - 1)
-}));
+const reelsSpin = () => new Promise(resolve => setTimeout(resolve, 2000));
+const g4 = () => new Promise(resolve => setTimeout(resolve, 3000));
 
-const addRounds = assign((ctx: any) => ({ autoplay: 5 }));
-const triggerSpin = () => send("SPIN");
-const hasAutoplayRounds = ctx => ctx.autoplay > 0;
-const shouldShowRealityCheck = ctx => ctx.realityCheckCount % 3 === 0;
-const check = () => alert("reality check");
-const g4_3sec = () => new Promise(resolve => setTimeout(resolve, 3000));
-const fake_server = () =>
-  new Promise(resolve => setTimeout(resolve, Math.random() * 5000));
-const asyncStuff = () => {
-  const time = g4_3sec();
-  const call = fake_server();
-  return Promise.all([time, call]);
-};
-const clearWin = assign((ctx: any) => ({ win: 0 }));
-const makeBet = assign((ctx: any) => ({ balance: ctx.balance - ctx.bet }));
-const winMoney = assign((ctx: any) => {
-  const win = Math.floor(Math.random() * 10);
-  return {
-    balance: ctx.balance + win,
-    win
-  };
+const spinRoutine = () => Promise.all([getWin(), reelsSpin(), g4()]);
+
+const loadResources = () => new Promise(resolve => setTimeout(resolve, 1000));
+const showIntroMovie = () => new Promise(resolve => setTimeout(resolve, 1000));
+
+const setAutoplayRounds = assign<typeof context>({ autoplay: 5 });
+const resetRounds = assign<typeof context>({ autoplay: 0 });
+const decreaseAutoplay = assign<typeof context>({
+  autoplay: ctx => Math.max(0, ctx.autoplay - 1)
 });
+const clearWin = assign<typeof context>({ win: 0 });
+const updateBalance = assign<typeof context>({
+  balance: ctx => ctx.balance + ctx.win
+});
+
+const placeBet = () => new Promise(resolve => setTimeout(resolve, 1000));
+const displayDialogs = ctx => {
+  const dialog = ctx.dialogs.shift();
+  if (dialog) {
+    console.log("DIALOGS!", dialog.title);
+    assign({ dialogs: ctx.dialogs });
+  }
+};
+
+const isWin = ctx => ctx.win !== 0;
+const stopIf = ctx =>
+  [
+    ctx.autoplay === 0, // no more rounds
+    ctx.win > 0, // on any win
+    ctx.balance < ctx.bet, // not enough money
+    ctx.balance < 998 // if cash decreases by
+  ].some(Boolean);
 
 export const machine = Machine<typeof context, SlotStateSchema, SlotEvent>(
   {
     id: "slot",
     strict: true,
-    initial: "idle",
+    initial: "loading",
     context,
+    on: {
+      DIALOG: {
+        actions: [
+          assign({
+            dialogs: (ctx, event) => [...ctx.dialogs, event.payload]
+          })
+        ]
+      }
+    },
     states: {
-      autoplay,
-      idle,
-      realityCheck,
-      spinning
+      loading: {
+        invoke: {
+          src: "loadResources",
+          onDone: "intro"
+        }
+      },
+      intro: {
+        invoke: {
+          src: "showIntroMovie",
+          onDone: "idle"
+        }
+      },
+      idle: {
+        entry: ["displayDialogs"],
+        on: {
+          SPIN: "bet",
+          AUTOPLAY: [
+            {
+              actions: ["setAutoplayRounds"]
+            }
+          ]
+        }
+      },
+      bet: {
+        entry: [
+          "clearWin",
+          "decreaseAutoplay",
+          assign({
+            balance: ctx => ctx.balance - ctx.bet
+          })
+        ],
+        invoke: {
+          src: "placeBet",
+          onDone: "spinning"
+        }
+      },
+      spinning: {
+        invoke: {
+          src: "spinRoutine",
+          onDone: {
+            actions: [
+              assign({
+                win: (_, event) => event.data[0].win
+              })
+            ],
+            target: "result"
+          }
+        }
+      },
+      result: {
+        after: {
+          200: [{ target: "win", cond: "isWin" }, { target: "noWin" }]
+        }
+      },
+      win: {
+        entry: ["updateBalance"],
+        after: {
+          1500: "autoplay"
+        }
+      },
+      noWin: {
+        after: {
+          1500: "autoplay"
+        }
+      },
+      autoplay: {
+        after: {
+          1000: [
+            { target: "idle", cond: "stopIf", actions: ["resetRounds"] },
+            { target: "bet" }
+          ]
+        }
+      }
     }
   },
   {
     actions: {
-      addOneToRealityCheck,
-      addRounds,
-      check,
-      makeBet,
+      updateBalance,
+      decreaseAutoplay,
       clearWin,
-      triggerSpin,
-      reduceAutoplayRounds,
-      winMoney
+      setAutoplayRounds,
+      resetRounds,
+      displayDialogs
     },
     guards: {
-      hasAutoplayRounds,
-      shouldShowRealityCheck
+      isWin,
+      stopIf
     },
     services: {
-      asyncStuff
+      loadResources,
+      showIntroMovie,
+      placeBet,
+      spinRoutine
     }
   }
 );
